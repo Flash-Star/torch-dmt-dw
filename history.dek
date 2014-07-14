@@ -1,0 +1,11 @@
+c..
+c..declarations for history trajectory storage
+c..
+c..ntmax       = maximum number of time entries
+
+      integer          ntmax
+      parameter        (ntmax=10000)
+      double precision ztime(ntmax),zpres(ntmax)
+      integer          ntime,curint
+
+      common /phist/   ztime,zpres,ntime,curint

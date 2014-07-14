@@ -1,0 +1,641 @@
+c..declaration for pipelining the eos routines
+
+c..maximum length of the row vector
+      integer   nrowmax
+      parameter (nrowmax = 1000)
+c      parameter (nrowmax = 1000)
+
+
+c..maximum number of isotopes
+      integer   irowmax
+      parameter (irowmax = 1)
+c      parameter (irowmax = 600)
+
+
+c..maximum number of ionization stages
+      integer   jstagemax
+      parameter (jstagemax = 1)
+c      parameter (jstagemax = 30)
+
+
+c..failure of an eos 
+      logical          eosfail
+      common /eosfc1/  eosfail
+
+
+
+c..lower and upper limits of the loop over rows
+      integer          jlo_eos,jhi_eos
+      common /eosvec2/ jlo_eos,jhi_eos
+
+
+
+c..thermodynamic and composition inputs
+      double precision     
+     1          temp_row(nrowmax),den_row(nrowmax),
+     2          abar_row(nrowmax),zbar_row(nrowmax),
+     3          zeff_row(nrowmax),ye_row(nrowmax)
+
+      common /thinp/
+     1          temp_row,den_row,
+     2          abar_row,zbar_row,
+     3          zeff_row,ye_row
+
+
+c..composition input
+      integer          niso 
+      double precision xmass_row(irowmax,nrowmax),
+     1                 aion_row(irowmax,nrowmax),
+     2                 zion_row(irowmax,nrowmax)
+      common  /cmpinp/ xmass_row,aion_row,zion_row,niso
+
+
+
+c..composition output
+      double precision frac_row(jstagemax,irowmax,nrowmax)
+      common /cmpout/  frac_row
+
+
+c..composition output for sneos
+      double precision xn_row(nrowmax),xp_row(nrowmax),
+     1                 xa_row(nrowmax),xhv_row(nrowmax),
+     2                 xmuhat_row(nrowmax)
+      common /cmpout2/ xn_row,xp_row,
+     1                 xa_row,xhv_row,
+     2                 xmuhat_row
+     
+      
+      
+c..totals and their derivatives
+      double precision
+     1          ptot_row(nrowmax),
+     2          dpt_row(nrowmax),dpd_row(nrowmax),
+     3          dpa_row(nrowmax),dpz_row(nrowmax),
+     4          dpdd_row(nrowmax),dpdt_row(nrowmax),
+     5          dpda_row(nrowmax),dpdz_row(nrowmax),
+     6          dptt_row(nrowmax),dpta_row(nrowmax),
+     7          dptz_row(nrowmax),dpaa_row(nrowmax),
+     8          dpaz_row(nrowmax),dpzz_row(nrowmax)
+
+      common /ptotc1/
+     1          ptot_row,
+     2          dpt_row,dpd_row,
+     3          dpa_row,dpz_row,
+     4          dpdd_row,dpdt_row,
+     5          dpda_row,dpdz_row,
+     6          dptt_row,dpta_row,
+     7          dptz_row,dpaa_row,
+     8          dpaz_row,dpzz_row
+
+      double precision
+     1          etot_row(nrowmax),
+     2          det_row(nrowmax),ded_row(nrowmax),
+     3          dea_row(nrowmax),dez_row(nrowmax),
+     4          dedd_row(nrowmax),dedt_row(nrowmax),
+     5          deda_row(nrowmax),dedz_row(nrowmax),
+     6          dett_row(nrowmax),deta_row(nrowmax),
+     7          detz_row(nrowmax),deaa_row(nrowmax),
+     8          deaz_row(nrowmax),dezz_row(nrowmax)
+
+      common /etotc1/
+     1          etot_row,
+     2          det_row,ded_row,
+     3          dea_row,dez_row,
+     4          dedd_row,dedt_row,
+     5          deda_row,dedz_row,
+     6          dett_row,deta_row,
+     7          detz_row,deaa_row,
+     8          deaz_row,dezz_row
+
+      double precision
+     1          stot_row(nrowmax),
+     2          dst_row(nrowmax),dsd_row(nrowmax),
+     3          dsa_row(nrowmax),dsz_row(nrowmax),
+     4          dsdd_row(nrowmax),dsdt_row(nrowmax),
+     5          dsda_row(nrowmax),dsdz_row(nrowmax),
+     6          dstt_row(nrowmax),dsta_row(nrowmax),
+     7          dstz_row(nrowmax),dsaa_row(nrowmax),
+     8          dsaz_row(nrowmax),dszz_row(nrowmax)
+
+      common /stotc1/
+     1          stot_row,
+     2          dst_row,dsd_row,
+     3          dsa_row,dsz_row,
+     4          dsdd_row,dsdt_row,
+     5          dsda_row,dsdz_row,
+     6          dstt_row,dsta_row,
+     7          dstz_row,dsaa_row,
+     8          dsaz_row,dszz_row
+
+
+
+c..radiation contributions 
+      double precision 
+     1          prad_row(nrowmax),
+     2          dpradt_row(nrowmax),dpradd_row(nrowmax),
+     3          dprada_row(nrowmax),dpradz_row(nrowmax),
+     4          dpraddd_row(nrowmax),dpraddt_row(nrowmax),
+     5          dpradda_row(nrowmax),dpraddz_row(nrowmax),
+     6          dpradtt_row(nrowmax),dpradta_row(nrowmax),
+     7          dpradtz_row(nrowmax),dpradaa_row(nrowmax),
+     8          dpradaz_row(nrowmax),dpradzz_row(nrowmax)
+      common /thprad/
+     1          prad_row,
+     2          dpradt_row,dpradd_row,
+     3          dprada_row,dpradz_row,
+     4          dpraddd_row,dpraddt_row,
+     5          dpradda_row,dpraddz_row,
+     6          dpradtt_row,dpradta_row,
+     7          dpradtz_row,dpradaa_row,
+     8          dpradaz_row,dpradzz_row
+
+
+      double precision 
+     1          erad_row(nrowmax),
+     2          deradt_row(nrowmax),deradd_row(nrowmax),
+     3          derada_row(nrowmax),deradz_row(nrowmax),
+     4          deraddd_row(nrowmax),deraddt_row(nrowmax),
+     5          deradda_row(nrowmax),deraddz_row(nrowmax),
+     6          deradtt_row(nrowmax),deradta_row(nrowmax),
+     7          deradtz_row(nrowmax),deradaa_row(nrowmax),
+     8          deradaz_row(nrowmax),deradzz_row(nrowmax)
+      common /therad/
+     1          erad_row,
+     2          deradt_row,deradd_row,
+     3          derada_row,deradz_row,
+     4          deraddd_row,deraddt_row,
+     5          deradda_row,deraddz_row,
+     6          deradtt_row,deradta_row,
+     7          deradtz_row,deradaa_row,
+     8          deradaz_row,deradzz_row
+
+
+      double precision
+     1          srad_row(nrowmax),
+     2          dsradt_row(nrowmax),dsradd_row(nrowmax),
+     3          dsrada_row(nrowmax),dsradz_row(nrowmax),
+     4          dsraddd_row(nrowmax),dsraddt_row(nrowmax),
+     5          dsradda_row(nrowmax),dsraddz_row(nrowmax),
+     6          dsradtt_row(nrowmax),dsradta_row(nrowmax),
+     7          dsradtz_row(nrowmax),dsradaa_row(nrowmax),
+     8          dsradaz_row(nrowmax),dsradzz_row(nrowmax)
+      common /thsrad/
+     1          srad_row,
+     2          dsradt_row,dsradd_row,
+     3          dsrada_row,dsradz_row,
+     4          dsraddd_row,dsraddt_row,
+     5          dsradda_row,dsraddz_row,
+     6          dsradtt_row,dsradta_row,
+     7          dsradtz_row,dsradaa_row,
+     8          dsradaz_row,dsradzz_row
+
+
+
+c..gas contributions 
+      double precision 
+     1          pgas_row(nrowmax),
+     2          dpgast_row(nrowmax),dpgasd_row(nrowmax),
+     3          dpgasa_row(nrowmax),dpgasz_row(nrowmax),
+     4          dpgasdd_row(nrowmax),dpgasdt_row(nrowmax),
+     5          dpgasda_row(nrowmax),dpgasdz_row(nrowmax),
+     6          dpgastt_row(nrowmax),dpgasta_row(nrowmax),
+     7          dpgastz_row(nrowmax),dpgasaa_row(nrowmax),
+     8          dpgasaz_row(nrowmax),dpgaszz_row(nrowmax)
+
+      common /thpgasc1/
+     1          pgas_row,
+     2          dpgast_row,dpgasd_row,
+     3          dpgasa_row,dpgasz_row,
+     4          dpgasdd_row,dpgasdt_row,
+     5          dpgasda_row,dpgasdz_row,
+     6          dpgastt_row,dpgasta_row,
+     7          dpgastz_row,dpgasaa_row,
+     8          dpgasaz_row,dpgaszz_row
+
+      double precision 
+     1          egas_row(nrowmax),
+     2          degast_row(nrowmax),degasd_row(nrowmax),
+     3          degasa_row(nrowmax),degasz_row(nrowmax),
+     4          degasdd_row(nrowmax),degasdt_row(nrowmax),
+     5          degasda_row(nrowmax),degasdz_row(nrowmax),
+     6          degastt_row(nrowmax),degasta_row(nrowmax),
+     7          degastz_row(nrowmax),degasaa_row(nrowmax),
+     8          degasaz_row(nrowmax),degaszz_row(nrowmax)
+
+      common /thegasc2/
+     1          egas_row,
+     2          degast_row,degasd_row,
+     3          degasa_row,degasz_row,
+     4          degasdd_row,degasdt_row,
+     5          degasda_row,degasdz_row,
+     6          degastt_row,degasta_row,
+     7          degastz_row,degasaa_row,
+     8          degasaz_row,degaszz_row
+
+      double precision 
+     1          sgas_row(nrowmax),
+     2          dsgast_row(nrowmax),dsgasd_row(nrowmax),
+     3          dsgasa_row(nrowmax),dsgasz_row(nrowmax),
+     4          dsgasdd_row(nrowmax),dsgasdt_row(nrowmax),
+     5          dsgasda_row(nrowmax),dsgasdz_row(nrowmax),
+     6          dsgastt_row(nrowmax),dsgasta_row(nrowmax),
+     7          dsgastz_row(nrowmax),dsgasaa_row(nrowmax),
+     8          dsgasaz_row(nrowmax),dsgaszz_row(nrowmax)
+
+      common /thsgasc1/
+     1          sgas_row,
+     2          dsgast_row,dsgasd_row,
+     3          dsgasa_row,dsgasz_row,
+     4          dsgasdd_row,dsgasdt_row,
+     5          dsgasda_row,dsgasdz_row,
+     6          dsgastt_row,dsgasta_row,
+     7          dsgastz_row,dsgasaa_row,
+     8          dsgasaz_row,dsgaszz_row
+
+
+
+
+
+
+c..ion contributions
+      double precision 
+     1          pion_row(nrowmax),
+     2          dpiont_row(nrowmax),dpiond_row(nrowmax),
+     3          dpiona_row(nrowmax),dpionz_row(nrowmax),
+     4          dpiondd_row(nrowmax),dpiondt_row(nrowmax),
+     5          dpionda_row(nrowmax),dpiondz_row(nrowmax),
+     6          dpiontt_row(nrowmax),dpionta_row(nrowmax),
+     7          dpiontz_row(nrowmax),dpionaa_row(nrowmax),
+     8          dpionaz_row(nrowmax),dpionzz_row(nrowmax)
+      common /thpion/
+     1          pion_row,
+     2          dpiont_row,dpiond_row,
+     3          dpiona_row,dpionz_row,
+     4          dpiondd_row,dpiondt_row,
+     5          dpionda_row,dpiondz_row,
+     6          dpiontt_row,dpionta_row,
+     7          dpiontz_row,dpionaa_row,
+     8          dpionaz_row,dpionzz_row
+
+
+      double precision 
+     1          eion_row(nrowmax),
+     2          deiont_row(nrowmax),deiond_row(nrowmax),
+     3          deiona_row(nrowmax),deionz_row(nrowmax),
+     4          deiondd_row(nrowmax),deiondt_row(nrowmax),
+     5          deionda_row(nrowmax),deiondz_row(nrowmax),
+     6          deiontt_row(nrowmax),deionta_row(nrowmax),
+     7          deiontz_row(nrowmax),deionaa_row(nrowmax),
+     8          deionaz_row(nrowmax),deionzz_row(nrowmax)
+      common /theion/
+     1          eion_row,
+     2          deiont_row,deiond_row,
+     3          deiona_row,deionz_row,
+     4          deiondd_row,deiondt_row,
+     5          deionda_row,deiondz_row,
+     6          deiontt_row,deionta_row,
+     7          deiontz_row,deionaa_row,
+     8          deionaz_row,deionzz_row
+
+
+      double precision
+     1          sion_row(nrowmax),
+     2          dsiont_row(nrowmax),dsiond_row(nrowmax),
+     3          dsiona_row(nrowmax),dsionz_row(nrowmax),
+     4          dsiondd_row(nrowmax),dsiondt_row(nrowmax),
+     5          dsionda_row(nrowmax),dsiondz_row(nrowmax),
+     6          dsiontt_row(nrowmax),dsionta_row(nrowmax),
+     7          dsiontz_row(nrowmax),dsionaa_row(nrowmax),
+     8          dsionaz_row(nrowmax),dsionzz_row(nrowmax)
+      common /thsion/
+     1          sion_row,
+     2          dsiont_row,dsiond_row,
+     3          dsiona_row,dsionz_row,
+     4          dsiondd_row,dsiondt_row,
+     5          dsionda_row,dsiondz_row,
+     6          dsiontt_row,dsionta_row,
+     7          dsiontz_row,dsionaa_row,
+     8          dsionaz_row,dsionzz_row
+
+      double precision
+     1          etaion_row(nrowmax),
+     2          detait_row(nrowmax),detaid_row(nrowmax),
+     3          detaia_row(nrowmax),detaiz_row(nrowmax),
+     4          detaidd_row(nrowmax),detaidt_row(nrowmax),
+     5          detaida_row(nrowmax),detaidz_row(nrowmax),
+     6          detaitt_row(nrowmax),detaita_row(nrowmax),
+     7          detaitz_row(nrowmax),detaiaa_row(nrowmax),
+     8          detaiaz_row(nrowmax),detaizz_row(nrowmax)
+      common /thetaion/
+     1          etaion_row,
+     2          detait_row,detaid_row,
+     3          detaia_row,detaiz_row,
+     4          detaidd_row,detaidt_row,
+     5          detaida_row,detaidz_row,
+     6          detaitt_row,detaita_row,
+     7          detaitz_row,detaiaa_row,
+     8          detaiaz_row,detaizz_row
+
+
+      double precision 
+     1          xni_row(nrowmax),xnim_row(nrowmax),
+     2          dxnit_row(nrowmax),dxnid_row(nrowmax),
+     3          dxnia_row(nrowmax),dxniz_row(nrowmax),
+     4          dxnidd_row(nrowmax),dxnidt_row(nrowmax),
+     5          dxnida_row(nrowmax),dxnidz_row(nrowmax),
+     6          dxnitt_row(nrowmax),dxnita_row(nrowmax),
+     7          dxnitz_row(nrowmax),dxniaa_row(nrowmax),
+     8          dxniaz_row(nrowmax),dxnizz_row(nrowmax)
+      common /th_xni_ion/
+     1          xni_row,xnim_row,
+     2          dxnit_row,dxnid_row,
+     3          dxnia_row,dxniz_row,
+     4          dxnidd_row,dxnidt_row,
+     5          dxnida_row,dxnidz_row,
+     6          dxnitt_row,dxnita_row,
+     7          dxnitz_row,dxniaa_row,
+     8          dxniaz_row,dxnizz_row
+
+
+
+c..electron-positron contributions 
+
+      double precision 
+     1         etaele_row(nrowmax),etapos_row(nrowmax),
+     2         detat_row(nrowmax),detad_row(nrowmax),
+     3         detaa_row(nrowmax),detaz_row(nrowmax),
+     4         detadd_row(nrowmax),detadt_row(nrowmax),
+     5         detada_row(nrowmax),detadz_row(nrowmax),
+     6         detatt_row(nrowmax),detata_row(nrowmax),
+     7         detatz_row(nrowmax),detaaa_row(nrowmax),
+     8         detaaz_row(nrowmax),detazz_row(nrowmax)
+
+      common /etapc1/
+     1         etaele_row,etapos_row,
+     2         detat_row,detad_row,
+     3         detaa_row,detaz_row,
+     4         detadd_row,detadt_row,
+     5         detada_row,detadz_row,
+     6         detatt_row,detata_row,
+     7         detatz_row,detaaa_row,
+     8         detaaz_row,detazz_row
+
+      double precision
+     1         pele_row(nrowmax),ppos_row(nrowmax),
+     2         dpept_row(nrowmax),dpepd_row(nrowmax),
+     3         dpepa_row(nrowmax),dpepz_row(nrowmax),
+     4         dpepdd_row(nrowmax),dpepdt_row(nrowmax),
+     5         dpepda_row(nrowmax),dpepdz_row(nrowmax),
+     6         dpeptt_row(nrowmax),dpepta_row(nrowmax),
+     7         dpeptz_row(nrowmax),dpepaa_row(nrowmax),
+     8         dpepaz_row(nrowmax),dpepzz_row(nrowmax)
+
+      common /thpepc1/
+     1         pele_row,ppos_row,
+     2         dpept_row,dpepd_row,
+     3         dpepa_row,dpepz_row,
+     4         dpepdd_row,dpepdt_row,
+     5         dpepda_row,dpepdz_row,
+     6         dpeptt_row,dpepta_row,
+     7         dpeptz_row,dpepaa_row,
+     8         dpepaz_row,dpepzz_row
+
+
+      double precision
+     1         eele_row(nrowmax),epos_row(nrowmax),
+     2         deept_row(nrowmax),deepd_row(nrowmax),
+     3         deepa_row(nrowmax),deepz_row(nrowmax),
+     4         deepdd_row(nrowmax),deepdt_row(nrowmax),
+     5         deepda_row(nrowmax),deepdz_row(nrowmax),
+     6         deeptt_row(nrowmax),deepta_row(nrowmax),
+     7         deeptz_row(nrowmax),deepaa_row(nrowmax),
+     8         deepaz_row(nrowmax),deepzz_row(nrowmax)
+
+      common /theepc1/
+     1         eele_row,epos_row,
+     2         deept_row,deepd_row,
+     3         deepa_row,deepz_row,
+     4         deepdd_row,deepdt_row,
+     5         deepda_row,deepdz_row,
+     6         deeptt_row,deepta_row,
+     7         deeptz_row,deepaa_row,
+     8         deepaz_row,deepzz_row
+
+
+      double precision
+     1         sele_row(nrowmax),spos_row(nrowmax),
+     2         dsept_row(nrowmax),dsepd_row(nrowmax),
+     3         dsepa_row(nrowmax),dsepz_row(nrowmax),
+     4         dsepdd_row(nrowmax),dsepdt_row(nrowmax),
+     5         dsepda_row(nrowmax),dsepdz_row(nrowmax),
+     6         dseptt_row(nrowmax),dsepta_row(nrowmax),
+     7         dseptz_row(nrowmax),dsepaa_row(nrowmax),
+     8         dsepaz_row(nrowmax),dsepzz_row(nrowmax)
+
+      common /thsepc1/
+     1         sele_row,spos_row,
+     2         dsept_row,dsepd_row,
+     3         dsepa_row,dsepz_row,
+     4         dsepdd_row,dsepdt_row,
+     5         dsepda_row,dsepdz_row,
+     6         dseptt_row,dsepta_row,
+     7         dseptz_row,dsepaa_row,
+     8         dsepaz_row,dsepzz_row
+
+
+      double precision
+     1         xne_row(nrowmax),xnp_row(nrowmax),xnem_row(nrowmax),
+     2         dxnet_row(nrowmax),dxned_row(nrowmax),
+     3         dxnea_row(nrowmax),dxnez_row(nrowmax),
+     4         dxnedd_row(nrowmax),dxnedt_row(nrowmax),
+     5         dxneda_row(nrowmax),dxnedz_row(nrowmax),
+     6         dxnett_row(nrowmax),dxneta_row(nrowmax),
+     7         dxnetz_row(nrowmax),dxneaa_row(nrowmax),
+     8         dxneaz_row(nrowmax),dxnezz_row(nrowmax)
+
+      common /thxnec1/
+     1         xne_row,xnp_row,xnem_row,
+     2         dxnet_row,dxned_row,
+     3         dxnea_row,dxnez_row,
+     4         dxnedd_row,dxnedt_row,
+     5         dxneda_row,dxnedz_row,
+     6         dxnett_row,dxneta_row,
+     7         dxnetz_row,dxneaa_row,
+     8         dxneaz_row,dxnezz_row
+
+
+
+c..ionization potential contributions
+      double precision pip_row(nrowmax),
+     1                 eip_row(nrowmax),
+     2                 sip_row(nrowmax)
+      common /thxip/   pip_row,eip_row,sip_row 
+
+
+
+c..coulomb contributions
+      double precision 
+     1          pcou_row(nrowmax),
+     2          dpcout_row(nrowmax),dpcoud_row(nrowmax),
+     3          dpcoua_row(nrowmax),dpcouz_row(nrowmax),
+     4          ecou_row(nrowmax),
+     5          decout_row(nrowmax),decoud_row(nrowmax),
+     6          decoua_row(nrowmax),decouz_row(nrowmax),
+     7          scou_row(nrowmax),
+     8          dscout_row(nrowmax),dscoud_row(nrowmax),
+     9          dscoua_row(nrowmax),dscouz_row(nrowmax),
+     &          plasg_row(nrowmax)
+      common /thcou/
+     1          pcou_row,
+     2          dpcout_row,dpcoud_row,
+     3          dpcoua_row,dpcouz_row,
+     4          ecou_row,
+     5          decout_row,decoud_row,
+     6          decoua_row,decouz_row,
+     7          scou_row,
+     8          dscout_row,dscoud_row,
+     9          dscoua_row,dscouz_row,
+     &          plasg_row
+
+
+c..thermodynamic consistency checks; maxwell relations 
+      double precision
+     1          dse_row(nrowmax),dpe_row(nrowmax),dsp_row(nrowmax)
+      common /thmax/
+     1          dse_row,dpe_row,dsp_row
+
+
+c..derivative based quantities for the gas
+      double precision
+     1          cp_gas_row(nrowmax),
+     2          dcp_gasdd_row(nrowmax),dcp_gasdt_row(nrowmax),
+     3          dcp_gasda_row(nrowmax),dcp_gasdz_row(nrowmax),
+     4          cv_gas_row(nrowmax),
+     5          dcv_gasdd_row(nrowmax),dcv_gasdt_row(nrowmax),
+     6          dcv_gasda_row(nrowmax),dcv_gasdz_row(nrowmax)
+
+      common /thdergc1/
+     1          cp_gas_row,
+     2          dcp_gasdd_row,dcp_gasdt_row,
+     3          dcp_gasda_row,dcp_gasdz_row,
+     4          cv_gas_row,
+     5          dcv_gasdd_row,dcv_gasdt_row,
+     6          dcv_gasda_row,dcv_gasdz_row
+
+      double precision
+     1          gam1_gas_row(nrowmax),
+     2          dgam1_gasdd_row(nrowmax),dgam1_gasdt_row(nrowmax),
+     3          dgam1_gasda_row(nrowmax),dgam1_gasdz_row(nrowmax),
+     4          gam2_gas_row(nrowmax),
+     5          dgam2_gasdd_row(nrowmax),dgam2_gasdt_row(nrowmax),
+     6          dgam2_gasda_row(nrowmax),dgam2_gasdz_row(nrowmax),
+     7          gam3_gas_row(nrowmax),
+     8          dgam3_gasdd_row(nrowmax),dgam3_gasdt_row(nrowmax),
+     9          dgam3_gasda_row(nrowmax),dgam3_gasdz_row(nrowmax),
+     &          nabad_gas_row(nrowmax),
+     1          dnab_gasdd_row(nrowmax),dnab_gasdt_row(nrowmax),
+     2          dnab_gasda_row(nrowmax),dnab_gasdz_row(nrowmax),
+     3          cs_gas_row(nrowmax),
+     4          dcs_gasdd_row(nrowmax),dcs_gasdt_row(nrowmax),
+     5          dcs_gasda_row(nrowmax),dcs_gasdz_row(nrowmax)
+
+      common /thdergc2/
+     1          gam1_gas_row,
+     2          dgam1_gasdd_row,dgam1_gasdt_row,
+     3          dgam1_gasda_row,dgam1_gasdz_row,
+     4          gam2_gas_row,
+     5          dgam2_gasdd_row,dgam2_gasdt_row,
+     6          dgam2_gasda_row,dgam2_gasdz_row,
+     7          gam3_gas_row,
+     8          dgam3_gasdd_row,dgam3_gasdt_row,
+     9          dgam3_gasda_row,dgam3_gasdz_row,
+     &          nabad_gas_row,
+     1          dnab_gasdd_row,dnab_gasdt_row,
+     2          dnab_gasda_row,dnab_gasdz_row,
+     3          cs_gas_row,
+     4          dcs_gasdd_row,dcs_gasdt_row,
+     5          dcs_gasda_row,dcs_gasdz_row
+
+
+
+c..derivative based quantities for the totals
+      double precision
+     1          cp_row(nrowmax),
+     2          dcpdd_row(nrowmax),dcpdt_row(nrowmax),
+     3          dcpda_row(nrowmax),dcpdz_row(nrowmax),
+     4          cv_row(nrowmax),
+     5          dcvdd_row(nrowmax),dcvdt_row(nrowmax),
+     6          dcvda_row(nrowmax),dcvdz_row(nrowmax)
+
+      common /thdergc1/
+     1          cp_row,
+     2          dcpdd_row,dcpdt_row,
+     3          dcpda_row,dcpdz_row,
+     4          cv_row,
+     5          dcvdd_row,dcvdt_row,
+     6          dcvda_row,dcvdz_row
+
+      double precision
+     1          gam1_row(nrowmax),
+     2          dgam1dd_row(nrowmax),dgam1dt_row(nrowmax),
+     3          dgam1da_row(nrowmax),dgam1dz_row(nrowmax),
+     4          gam2_row(nrowmax),
+     5          dgam2dd_row(nrowmax),dgam2dt_row(nrowmax),
+     6          dgam2da_row(nrowmax),dgam2dz_row(nrowmax),
+     7          gam3_row(nrowmax),
+     8          dgam3dd_row(nrowmax),dgam3dt_row(nrowmax),
+     9          dgam3da_row(nrowmax),dgam3dz_row(nrowmax),
+     &          nabad_row(nrowmax),
+     1          dnabdd_row(nrowmax),dnabdt_row(nrowmax),
+     2          dnabda_row(nrowmax),dnabdz_row(nrowmax),
+     3          cs_row(nrowmax),
+     4          dcsdd_row(nrowmax),dcsdt_row(nrowmax),
+     5          dcsda_row(nrowmax),dcsdz_row(nrowmax)
+
+      common /thdergc2/
+     1          gam1_row,
+     2          dgam1dd_row,dgam1dt_row,
+     3          dgam1da_row,dgam1dz_row,
+     4          gam2_row,
+     5          dgam2dd_row,dgam2dt_row,
+     6          dgam2da_row,dgam2dz_row,
+     7          gam3_row,
+     8          dgam3dd_row,dgam3dt_row,
+     9          dgam3da_row,dgam3dz_row,
+     &          nabad_row,
+     1          dnabdd_row,dnabdt_row,
+     2          dnabda_row,dnabdz_row,
+     3          cs_row,
+     4          dcsdd_row,dcsdt_row,
+     5          dcsda_row,dcsdz_row
+
+
+
+
+c..a few work arrays
+      double precision eoswrk01(nrowmax),eoswrk02(nrowmax),
+     1                 eoswrk03(nrowmax),eoswrk04(nrowmax)
+      common /deedoo/  eoswrk01,eoswrk02,eoswrk03,eoswrk04
+
+
+c..for debugging
+      double precision 
+     1         crp_row(nrowmax),
+     2         dcrpt_row(nrowmax),dcrpd_row(nrowmax),
+     3         dcrpa_row(nrowmax),dcrpz_row(nrowmax),
+     4         dcrpdd_row(nrowmax),dcrpdt_row(nrowmax),
+     5         dcrpda_row(nrowmax),dcrpdz_row(nrowmax),
+     6         dcrptt_row(nrowmax),dcrpta_row(nrowmax),
+     7         dcrptz_row(nrowmax),dcrpaa_row(nrowmax),
+     8         dcrpaz_row(nrowmax),dcrpzz_row(nrowmax)
+
+
+      common /crpc1/
+     1         crp_row,
+     2         dcrpt_row,dcrpd_row,
+     3         dcrpa_row,dcrpz_row,
+     4         dcrpdd_row,dcrpdt_row,
+     5         dcrpda_row,dcrpdz_row,
+     6         dcrptt_row,dcrpta_row,
+     7         dcrptz_row,dcrpaa_row,
+     8         dcrpaz_row,dcrpzz_row
