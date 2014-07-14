@@ -36,7 +36,8 @@ whi = 1.0
 # Number of top-level points in w to use
 wnum = 100
 
-os.chdir('./torch-dmt-dw')
+#Unnecessary: we're in the torch directory
+#os.chdir('./torch-dmt-dw')
 mainlog = open('sonicscan.log','w')
 fsr = open('scanrange_log.txt','w')
 # End global definitions
